@@ -1,0 +1,1 @@
+        // Dùng Thread riêng để việc lưu DB không làm đơ giao diện
