@@ -9,7 +9,7 @@ void bsp_led_init(void) {
 }
 
 void bsp_led_set_rgb(uint8_t r, uint8_t g, uint8_t b) {
-  analogWrite(PIN_LED_R, 255 - r);
-  analogWrite(PIN_LED_G, 255 - g);
-  analogWrite(PIN_LED_B, 255 - b);
+  analogWrite(PIN_LED_R, r);
+  analogWrite(PIN_LED_G, g);
+  analogWrite(PIN_LED_B, b);
 }

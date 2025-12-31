@@ -6,14 +6,21 @@
 #define I2C_MASTER_SCL_IO 22
 #define I2C_MASTER_FREQ_HZ 100000
 
+// RAIN SENSOR PINS
+#define PIN_RAIN_SIGNAL   36 
+#define PIN_RAIN_POWER    2
+
 // FAN PINS
-#define PIN_FAN_INA 16
-#define PIN_FAN_INB 17
+#define PIN_FAN_INA 17
+#define PIN_FAN_INB 16
 
 // LED PINS
 #define PIN_LED_R 25
 #define PIN_LED_G 26
 #define PIN_LED_B 27
+
+// BUZZER PIN
+#define PIN_BUZZER 12
 
 // WIFI CONFIG
 #define WIFI_SSID       "C14.04"            // WIFI NAME
@@ -28,8 +35,6 @@
 // --- MQTT TOPICS ---
 #define TOPIC_SENSOR    "smarthome/k22/sensor" 
 #define TOPIC_FAN_SET   "smarthome/k22/control"
-/* Reserved for future use
-#define TOPIC_LED_SET   "smarthome/k22/led/set"
-*/
+#define TOPIC_LED_SET   "smarthome/k22/control"
 
 #endif

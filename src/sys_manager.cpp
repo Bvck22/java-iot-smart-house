@@ -3,6 +3,8 @@
 #include "bsp_sensor.h"
 #include "bsp_fan.h"
 #include "bsp_led.h"
+#include "bsp_buzzer.h"
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <Arduino.h>
@@ -12,6 +14,7 @@
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+int current_rain = 0;
 float current_temp = 0;
 float current_hum = 0;
 bool manual_fan_override = false;
@@ -27,48 +30,83 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 
     Serial.printf("[MQTT] Message arrived [%s]: %s\n", topic, msg);
 
-    if (strcmp(topic, TOPIC_FAN_SET) == 0) {
-        int speed = atoi(msg);
-        if (speed < 0) speed = 0;
-        if (speed > 255) speed = 255;
-        
-        bsp_fan_set_speed(speed);
-        manual_fan_override = true;
-        Serial.printf(" -> Set Fan Speed: %d\n", speed);
-    }
-/* Reserved for future use
-    if (strcmp(topic, TOPIC_LED_SET) == 0) {
-        int r, g, b;
-        if (sscanf(msg, "%d,%d,%d", &r, &g, &b) == 3) {
-            bsp_led_set_rgb(r, g, b);
-            Serial.printf(" -> Set LED RGB: %d %d %d\n", r, g, b);
+    if (strcmp(topic, TOPIC_FAN_SET) == 0 || strcmp(topic, TOPIC_LED_SET) == 0) {
+        int command = atoi(msg);
+        switch (command) {
+            case 1:
+                bsp_led_set_rgb(255, 255, 255);
+                Serial.println(" -> Command 1: Light ON");
+                break;
+
+            case 0:
+                bsp_led_set_rgb(0, 0, 0);
+                Serial.println(" -> Command 0: Light OFF");
+                break;
+
+            case 2:
+                bsp_fan_set_speed(200);
+                manual_fan_override = true;
+                Serial.println(" -> Command 2: Fan ON");
+                break;
+
+            case 3:
+                bsp_fan_set_speed(0);
+                manual_fan_override = true;
+                Serial.println(" -> Command 3: Fan OFF");
+                break;
+            
+            case 4:
+                bsp_buzzer_set(true);
+                Serial.println(" -> Command 4: Buzzer ON");
+                break;
+
+            case 5:
+                bsp_buzzer_set(false);
+                Serial.println(" -> Command 5: Buzzer OFF");
+                break;
+
+            default:
+                if (command > 10 && command <= 255) {
+                    if (command > 200) command = 200;
+                    bsp_fan_set_speed(command);
+                    manual_fan_override = true;
+                    Serial.printf(" -> Custom Fan Speed: %d\n", command);
+                }
+                break;
         }
     }
-*/
 }
 
 void task_sensor(void *pvParam) {
     char json_buffer[100];
-    
     while (1) {
-        if (bsp_sensor_get_data(&current_temp, &current_hum)) {
-            Serial.printf("Temp: %.2f C | Hum: %.2f %%\n", current_temp, current_hum);
+        if (bsp_sensor_get_data(&current_temp, &current_hum, &current_rain)) {
+            
+            Serial.printf("Temp: %.2f C | Hum: %.2f %% | Rain: %d %%\n", 
+                          current_temp, current_hum, current_rain);
 
             if (client.connected()) {
                 snprintf(json_buffer, sizeof(json_buffer), 
-                         "{\"temp\": %.2f, \"hum\": %.2f}", current_temp, current_hum);
+                         "%.2f;%.2f;%d", current_temp, current_hum, current_rain);
+                
                 client.publish(TOPIC_SENSOR, json_buffer);
             }
 
+            if (current_rain > 50) {
+                 Serial.println(" -> Canh bao: Troi dang mua!");
+                 bsp_buzzer_set(true);
+            }
+
             if (!manual_fan_override && current_temp > 32.0) {
-                bsp_fan_set_speed(180); // Tự bật cứu hộ
+                bsp_fan_set_speed(180);
                 Serial.println(" -> Auto Fan ON (High Temp)");
             }
         } 
         else {
             Serial.println("Sensor Error!");
         }
-        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        vTaskDelay(pdMS_TO_TICKS(5000)); 
     }
 }
 
@@ -112,9 +150,7 @@ void reconnect() {
         if (client.connect(clientId.c_str(), MQTT_USER, MQTT_PASS)) {
             Serial.println("connected");
             client.subscribe(TOPIC_FAN_SET);
-            /* Reserved for future use
             client.subscribe(TOPIC_LED_SET);
-            */
         } else {
             Serial.print("failed, rc=");
             Serial.print(client.state());
@@ -130,9 +166,11 @@ void system_init(void) {
 
     bsp_led_init();
     bsp_fan_init();
+    bsp_buzzer_init();
 
     bsp_led_set_rgb(0, 0, 0); 
     bsp_fan_set_speed(0);
+    bsp_buzzer_set(false);
 
     if (!bsp_sensor_init()) {
         Serial.println("Sensor Init Failed!");

@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 bool bsp_sensor_init(void);
-bool bsp_sensor_get_data(float *temp, float *hum);
+bool bsp_sensor_get_data(float *temp, float *hum, int *rain_percent);
 
 #ifdef __cplusplus
 }
