@@ -15,4 +15,21 @@
 #define PIN_LED_G 26
 #define PIN_LED_B 27
 
+// WIFI CONFIG
+#define WIFI_SSID       "C14.04"            // WIFI NAME
+#define WIFI_PASSWORD   "chungcubaton"      // WIFI PASSWORD
+
+// MQTT CONFIG
+#define MQTT_SERVER     "broker.hivemq.com" // IP MQTT Broker
+#define MQTT_PORT       1883                // PORT MQTT Broker
+#define MQTT_USER       ""                  // Blank if none
+#define MQTT_PASS       ""                  // Blank if none
+
+// --- MQTT TOPICS ---
+#define TOPIC_SENSOR    "smarthome/k22/sensor" 
+#define TOPIC_FAN_SET   "smarthome/k22/control"
+/* Reserved for future use
+#define TOPIC_LED_SET   "smarthome/k22/led/set"
+*/
+
 #endif
