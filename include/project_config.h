@@ -1,0 +1,18 @@
+#ifndef PROJECT_CONFIG_H
+#define PROJECT_CONFIG_H
+
+// I2C PINS
+#define I2C_MASTER_SDA_IO 21
+#define I2C_MASTER_SCL_IO 22
+#define I2C_MASTER_FREQ_HZ 100000
+
+// FAN PINS
+#define PIN_FAN_INA 16
+#define PIN_FAN_INB 17
+
+// LED PINS
+#define PIN_LED_R 25
+#define PIN_LED_G 26
+#define PIN_LED_B 27
+
+#endif
