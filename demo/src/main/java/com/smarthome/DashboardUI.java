@@ -162,7 +162,6 @@ public class DashboardUI extends JFrame implements DataListener {
             try {
                 if (data.contains(";")) {
                     String[] parts = data.split(";");
-                    // Quan trọng: .trim() để xóa khoảng trắng thừa
                     float temp = Float.parseFloat(parts[0].trim());
                     float hum = Float.parseFloat(parts[1].trim());
 
@@ -173,24 +172,20 @@ public class DashboardUI extends JFrame implements DataListener {
                     timeSecond += 10;
                     seriesTemp.add(timeSecond, temp);
 
-                    // Logic cảnh báo Telegram
-                    if (temp > 40) {
-                        lblStatus.setText("CẢNH BÁO: QUÁ NHIỆT!");
+                    // --- SỬA ĐOẠN NÀY ---
+                    // Gọi sang TelegramNotifier để kiểm tra logic 31.5 độ
+                    boolean isDangerous = TelegramNotifier.checkAndAlertFire(temp);
+
+                    if (isDangerous) {
+                        lblStatus.setText("🔥 CẢNH BÁO: NHÀ CHÁY! 🔥");
                         lblStatus.setForeground(Color.RED);
-                        
-                        long currentTime = System.currentTimeMillis();
-                        if (currentTime - lastAlertTime > ALERT_COOLDOWN) {
-                            String msg = "SOS! CẢNH BÁO KHẨN CẤP!\nNhà bạn đang quá nóng.\nNhiệt độ: " + temp + "°C";
-                            TelegramNotifier.sendAlert(msg);
-                            lastAlertTime = currentTime;
-                        }
                     } else {
                         lblStatus.setText("Trạng thái: Online (Bình thường)");
                         lblStatus.setForeground(new Color(0, 150, 0));
                     }
+                    // --------------------
                 }
             } catch (Exception e) {
-                // Chỉ in lỗi nếu thực sự có vấn đề, không in rác
                 System.err.println("Lỗi xử lý data: " + e.getMessage());
             }
         });
