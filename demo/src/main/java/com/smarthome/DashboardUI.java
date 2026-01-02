@@ -19,7 +19,12 @@ import javax.swing.border.TitledBorder;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.PiePlot; // --- MỚI: Dùng cho biểu đồ tròn ---
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.general.DefaultPieDataset; // --- MỚI: Dataset cho biểu đồ tròn ---
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -32,6 +37,11 @@ public class DashboardUI extends JFrame implements DataListener {
     private MqttManager mqttManager;
 
     private XYSeries seriesTemp;
+    private XYSeries seriesHum;
+    
+    // --- MỚI: Dataset cho biểu đồ tròn mưa ---
+    private DefaultPieDataset rainDataset;
+    
     private int timeSecond = 0;
 
     private long lastAlertTime = 0; 
@@ -45,13 +55,15 @@ public class DashboardUI extends JFrame implements DataListener {
 
     private void setupUI() {
         setTitle("IoT Smart Home System Dashboard");
-        setSize(800, 600);
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Control Center", createDashboardPanel());
-        tabbedPane.addTab("Temperature Chart", createChartPanel());
+        tabbedPane.addTab("Temp & Hum Chart", createChartPanel());
+        // --- MỚI: Thêm Tab biểu đồ tròn ---
+        tabbedPane.addTab("Rain Level (Pie Chart)", createRainPieChartPanel());
 
         add(tabbedPane);
         setVisible(true);
@@ -63,8 +75,8 @@ public class DashboardUI extends JFrame implements DataListener {
         JPanel pnlDisplay = new JPanel(new GridLayout(2, 1));
         pnlDisplay.setBackground(new Color(240, 248, 255));
         
-        lblTemp = new JLabel("Temperature: -- °C | Humidity: -- %", SwingConstants.CENTER);
-        lblTemp.setFont(new Font("Arial", Font.BOLD, 28));
+        lblTemp = new JLabel("Temperature: -- °C | Humidity: -- % | Rain: --", SwingConstants.CENTER);
+        lblTemp.setFont(new Font("Arial", Font.BOLD, 24));
         lblTemp.setForeground(new Color(0, 102, 204));
         
         lblStatus = new JLabel("Status: Connecting to MQTT...", SwingConstants.CENTER);
@@ -121,28 +133,70 @@ public class DashboardUI extends JFrame implements DataListener {
         return panel;
     }
 
+    // --- Tab 2: Biểu đồ đường (Line Chart) ---
     private JPanel createChartPanel() {
         seriesTemp = new XYSeries("Temperature (°C)");
-        XYSeriesCollection dataset = new XYSeriesCollection(seriesTemp);
+        XYSeriesCollection datasetTemp = new XYSeriesCollection(seriesTemp);
+        
         JFreeChart chart = ChartFactory.createXYLineChart(
-                "Temperature Variation", "Time", "Temperature",
-                dataset, PlotOrientation.VERTICAL, true, true, false
+                "Environment Monitor", "Time", "Temperature",
+                datasetTemp, PlotOrientation.VERTICAL, true, true, false
         );
-     
-        // Cấu hình để hiện chấm tròn (Fix lỗi không vẽ khi ít dữ liệu)
-        org.jfree.chart.plot.XYPlot plot = chart.getXYPlot();
-           org.jfree.chart.axis.NumberAxis rangeAxis = (org.jfree.chart.axis.NumberAxis) plot.getRangeAxis();
+
+        XYPlot plot = chart.getXYPlot();
         
-        // 2. Tắt chế độ tự động bao gồm số 0 (nếu không nó sẽ luôn cố hiện số 0)
-        rangeAxis.setAutoRangeIncludesZero(false);
+        NumberAxis rangeAxisTemp = (NumberAxis) plot.getRangeAxis();
+        rangeAxisTemp.setRange(27.0, 31.0);
+        rangeAxisTemp.setAutoRangeIncludesZero(false);
+
+        XYLineAndShapeRenderer rendererTemp = new XYLineAndShapeRenderer();
+        rendererTemp.setSeriesPaint(0, Color.RED);
+        rendererTemp.setSeriesShapesVisible(0, true);
+        plot.setRenderer(0, rendererTemp);
+
+        // Setup Dataset 2 (Humidity)
+        seriesHum = new XYSeries("Humidity (%)");
+        XYSeriesCollection datasetHum = new XYSeriesCollection(seriesHum);
         
-        // 3. Cài đặt cứng khoảng từ 26 đến 32
-        rangeAxis.setRange(27.0, 31.0);
-        org.jfree.chart.renderer.xy.XYLineAndShapeRenderer renderer = new org.jfree.chart.renderer.xy.XYLineAndShapeRenderer();
-        renderer.setSeriesShapesVisible(0, true); 
-        renderer.setSeriesLinesVisible(0, true);
-        plot.setRenderer(renderer);
+        NumberAxis rangeAxisHum = new NumberAxis("Humidity");
+        rangeAxisHum.setRange(60.0, 70.0);
+        rangeAxisHum.setAutoRangeIncludesZero(false);
         
+        plot.setDataset(1, datasetHum); 
+        plot.setRangeAxis(1, rangeAxisHum); 
+        plot.mapDatasetToRangeAxis(1, 1);
+        
+        XYLineAndShapeRenderer rendererHum = new XYLineAndShapeRenderer();
+        rendererHum.setSeriesPaint(0, Color.BLUE);
+        rendererHum.setSeriesShapesVisible(0, true);
+        plot.setRenderer(1, rendererHum);
+
+        return new ChartPanel(chart);
+    }
+
+    // --- MỚI: Tab 3: Biểu đồ tròn (Pie Chart) cho Lượng mưa ---
+    private JPanel createRainPieChartPanel() {
+        rainDataset = new DefaultPieDataset();
+        // Khởi tạo giá trị mặc định
+        rainDataset.setValue("Rain Level", 0);
+        rainDataset.setValue("Dry (Empty)", 100);
+
+        JFreeChart chart = ChartFactory.createPieChart(
+            "Current Rain Sensor Status",   // Tiêu đề
+            rainDataset,                    // Dữ liệu
+            true,                           // Hiển thị chú thích (Legend)
+            true,
+            false
+        );
+
+        // Tùy chỉnh màu sắc cho đẹp
+        PiePlot plot = (PiePlot) chart.getPlot();
+        plot.setSectionPaint("Rain Level", new Color(51, 153, 255)); // Màu xanh nước biển
+        plot.setSectionPaint("Dry (Empty)", new Color(220, 220, 220)); // Màu xám nhạt
+        
+        // Hiển thị phần trăm
+        plot.setSimpleLabels(true);
+
         return new ChartPanel(chart);
     }
 
@@ -165,14 +219,31 @@ public class DashboardUI extends JFrame implements DataListener {
                     float temp = Float.parseFloat(parts[0].trim());
                     float hum = Float.parseFloat(parts[1].trim());
 
-                    lblTemp.setText("Temperature: " + temp + " °C | Humidity: " + hum + "%");
+                    String rainStr = "0";
+                    float rainVal = 0;
+                    if (parts.length >= 3) {
+                        rainStr = parts[2].trim();
+                        rainVal = Float.parseFloat(rainStr);
+                    }
+                    
+                    lblTemp.setText("Temperature: " + temp + " °C | Humidity: " + hum + "% | Rain: " + rainStr);
 
                     dbManager.saveSensorData(temp, hum);
 
                     timeSecond += 10;
                     seriesTemp.add(timeSecond, temp);
+                    seriesHum.add(timeSecond, hum);
+                    
+                    // --- MỚI: Cập nhật biểu đồ tròn ---
+                    // Giả sử cảm biến trả về 0-100 (%), nếu dùng 0-1024 thì bạn chia tỉ lệ lại nhé
+                    float maxVal = 100.0f; 
+                    float rainDisplay = rainVal;
+                    if (rainDisplay > maxVal) rainDisplay = maxVal; // Cắt trần nếu quá 100
+                    
+                    rainDataset.setValue("Rain Level", rainDisplay);
+                    rainDataset.setValue("Dry (Empty)", maxVal - rainDisplay);
+                    // ----------------------------------
 
-                    // --- SỬA ĐOẠN NÀY ---
                     // Gọi sang TelegramNotifier để kiểm tra logic 31.5 độ
                     boolean isDangerous = TelegramNotifier.checkAndAlertFire(temp);
 
@@ -183,7 +254,6 @@ public class DashboardUI extends JFrame implements DataListener {
                         lblStatus.setText("Status: Online");
                         lblStatus.setForeground(new Color(0, 150, 0));
                     }
-                    // --------------------
                 }
             } catch (Exception e) {
                 System.err.println("Error: " + e.getMessage());
