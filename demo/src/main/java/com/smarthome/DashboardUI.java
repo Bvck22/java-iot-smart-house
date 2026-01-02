@@ -44,14 +44,14 @@ public class DashboardUI extends JFrame implements DataListener {
     }
 
     private void setupUI() {
-        setTitle("Hệ Thống IoT Smart Home - MQTT Cloud Control");
+        setTitle("IoT Smart Home System Dashboard");
         setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Trung tâm điều khiển", createDashboardPanel());
-        tabbedPane.addTab("Biểu đồ nhiệt độ", createChartPanel());
+        tabbedPane.addTab("Control Center", createDashboardPanel());
+        tabbedPane.addTab("Temperature Chart", createChartPanel());
 
         add(tabbedPane);
         setVisible(true);
@@ -63,11 +63,11 @@ public class DashboardUI extends JFrame implements DataListener {
         JPanel pnlDisplay = new JPanel(new GridLayout(2, 1));
         pnlDisplay.setBackground(new Color(240, 248, 255));
         
-        lblTemp = new JLabel("Nhiệt độ: -- °C | Độ ẩm: -- %", SwingConstants.CENTER);
+        lblTemp = new JLabel("Temperature: -- °C | Humidity: -- %", SwingConstants.CENTER);
         lblTemp.setFont(new Font("Arial", Font.BOLD, 28));
         lblTemp.setForeground(new Color(0, 102, 204));
         
-        lblStatus = new JLabel("Trạng thái: Đang kết nối MQTT...", SwingConstants.CENTER);
+        lblStatus = new JLabel("Status: Connecting to MQTT...", SwingConstants.CENTER);
         lblStatus.setFont(new Font("Arial", Font.ITALIC, 14));
         
         pnlDisplay.add(lblTemp);
@@ -77,9 +77,9 @@ public class DashboardUI extends JFrame implements DataListener {
         JPanel pnlControls = new JPanel(new GridLayout(1, 3, 20, 20));
         pnlControls.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        pnlControls.add(createDevicePanel("ĐÈN PHÒNG KHÁCH", "1", "0", new Color(255, 255, 204)));
-        pnlControls.add(createDevicePanel("QUẠT TRẦN", "2", "3", new Color(204, 255, 204)));
-        pnlControls.add(createDevicePanel("ĐIỀU HÒA", "4", "5", new Color(204, 229, 255)));
+        pnlControls.add(createDevicePanel("LED", "1", "0", new Color(255, 255, 204)));
+        pnlControls.add(createDevicePanel("FAN", "2", "3", new Color(204, 255, 204)));
+        pnlControls.add(createDevicePanel("BUZZER", "4", "5", new Color(204, 229, 255)));
 
         pnlMain.add(pnlControls, BorderLayout.CENTER);
         return pnlMain;
@@ -96,24 +96,24 @@ public class DashboardUI extends JFrame implements DataListener {
         lblIcon.setFont(new Font("Arial", Font.BOLD, 16));
         panel.add(lblIcon);
 
-        JButton btnOn = new JButton("BẬT " + deviceName);
+        JButton btnOn = new JButton( deviceName +" ON");
         btnOn.setBackground(Color.WHITE);
         btnOn.setForeground(new Color(0, 150, 0));
         btnOn.setFont(new Font("Arial", Font.BOLD, 14));
         
         btnOn.addActionListener(e -> {
             mqttManager.publish(onCmd);
-            JOptionPane.showMessageDialog(this, "Đã gửi lệnh BẬT " + deviceName);
+            JOptionPane.showMessageDialog(this, "Command Send " + deviceName);
         });
 
-        JButton btnOff = new JButton("TẮT " + deviceName);
+        JButton btnOff = new JButton( deviceName + " OFF");
         btnOff.setBackground(Color.WHITE);
         btnOff.setForeground(Color.RED);
         btnOff.setFont(new Font("Arial", Font.BOLD, 14));
         
         btnOff.addActionListener(e -> {
             mqttManager.publish(offCmd);
-            JOptionPane.showMessageDialog(this, "Đã gửi lệnh TẮT " + deviceName);
+            JOptionPane.showMessageDialog(this, "Command Send " + deviceName);
         });
 
         panel.add(btnOn);
@@ -122,10 +122,10 @@ public class DashboardUI extends JFrame implements DataListener {
     }
 
     private JPanel createChartPanel() {
-        seriesTemp = new XYSeries("Nhiệt độ (°C)");
+        seriesTemp = new XYSeries("Temperature (°C)");
         XYSeriesCollection dataset = new XYSeriesCollection(seriesTemp);
         JFreeChart chart = ChartFactory.createXYLineChart(
-                "Diễn biến nhiệt độ", "Thời gian", "Nhiệt độ",
+                "Temperature Variation", "Time", "Temperature",
                 dataset, PlotOrientation.VERTICAL, true, true, false
         );
      
@@ -148,10 +148,10 @@ public class DashboardUI extends JFrame implements DataListener {
 
     public void setConnectionStatus(boolean isConnected) {
         if (isConnected) {
-            lblStatus.setText("Trạng thái: Online (Đã nối tới MQTT Broker)");
+            lblStatus.setText("Status: Online");
             lblStatus.setForeground(new Color(0, 150, 0));
         } else {
-            lblStatus.setText("Trạng thái: Mất kết nối MQTT!");
+            lblStatus.setText("Status: Lost connection to MQTT!");
             lblStatus.setForeground(Color.RED);
         }
     }
@@ -165,7 +165,7 @@ public class DashboardUI extends JFrame implements DataListener {
                     float temp = Float.parseFloat(parts[0].trim());
                     float hum = Float.parseFloat(parts[1].trim());
 
-                    lblTemp.setText("Nhiệt độ: " + temp + " °C | Độ ẩm: " + hum + "%");
+                    lblTemp.setText("Temperature: " + temp + " °C | Humidity: " + hum + "%");
 
                     dbManager.saveSensorData(temp, hum);
 
@@ -177,16 +177,16 @@ public class DashboardUI extends JFrame implements DataListener {
                     boolean isDangerous = TelegramNotifier.checkAndAlertFire(temp);
 
                     if (isDangerous) {
-                        lblStatus.setText("🔥 CẢNH BÁO: NHÀ CHÁY! 🔥");
+                        lblStatus.setText(" Warning: Your house is burning! ");
                         lblStatus.setForeground(Color.RED);
                     } else {
-                        lblStatus.setText("Trạng thái: Online (Bình thường)");
+                        lblStatus.setText("Status: Online");
                         lblStatus.setForeground(new Color(0, 150, 0));
                     }
                     // --------------------
                 }
             } catch (Exception e) {
-                System.err.println("Lỗi xử lý data: " + e.getMessage());
+                System.err.println("Error: " + e.getMessage());
             }
         });
     }

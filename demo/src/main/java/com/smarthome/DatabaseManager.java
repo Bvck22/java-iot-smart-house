@@ -32,10 +32,10 @@ public class DatabaseManager {
              Statement stmt = conn.createStatement()) {
             
             stmt.execute(sql);
-            System.out.println("[Database Cloud] Đã kết nối MySQL và kiểm tra bảng thành công!");
+            System.out.println("[Database Cloud] Connected Successfully.");
             
         } catch (SQLException e) {
-            System.err.println("[Database Lỗi] " + e.getMessage());
+            System.err.println("[Database Error] " + e.getMessage());
         }
     }
 

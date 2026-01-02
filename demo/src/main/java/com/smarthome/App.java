@@ -3,7 +3,7 @@ package com.smarthome;
 public class App {
     public static void main(String[] args) {
 
-        System.out.println("Khởi động Smart Home MQTT...");
+        System.out.println("Init Smart Home MQTT...");
 
 
         MqttManager mqttManager = new MqttManager();

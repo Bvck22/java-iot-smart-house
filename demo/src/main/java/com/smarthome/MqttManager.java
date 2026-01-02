@@ -27,16 +27,16 @@ public class MqttManager {
             options.setCleanSession(true);
             options.setConnectionTimeout(10); // 10 giây timeout
 
-            System.out.println("Đang kết nối tới Broker: " + BROKER);
+            System.out.println("Connecting to Broker: " + BROKER);
             client.connect(options);
             
             if (client.isConnected()) {
-                System.out.println(">> Đã kết nối MQTT thành công!");
+                System.out.println(">> MQTT Successfully Connected!");
                 startSubscribing(); // Kết nối xong là đăng ký nghe ngay
                 return true;
             }
         } catch (MqttException e) {
-            System.out.println("Lỗi kết nối MQTT: " + e.getMessage());
+            System.out.println("MQTT Error: " + e.getMessage());
         }
         return false;
     }
@@ -48,7 +48,7 @@ public class MqttManager {
                 MqttMessage msg = new MqttMessage(message.getBytes(StandardCharsets.UTF_8));
                 msg.setQos(0); // Qos 0: Gửi 1 lần, không cần xác nhận (nhanh)
                 client.publish(TOPIC_CONTROL, msg);
-                System.out.println("[MQTT Gửi]: " + message + " -> " + TOPIC_CONTROL);
+                System.out.println("[MQTT Send]: " + message + " -> " + TOPIC_CONTROL);
             } catch (MqttException e) {
                 e.printStackTrace();
             }
@@ -67,7 +67,7 @@ public class MqttManager {
                     listener.onDataReceived(payload);
                 }
             });
-            System.out.println(">> Đang lắng nghe Topic: " + TOPIC_DATA);
+            System.out.println(">> Subscribing Topic: " + TOPIC_DATA);
         } catch (MqttException e) {
             e.printStackTrace();
         }

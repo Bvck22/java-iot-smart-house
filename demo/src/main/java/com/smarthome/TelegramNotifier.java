@@ -30,12 +30,12 @@ public class TelegramNotifier {
                 
                 int responseCode = conn.getResponseCode();
                 if (responseCode == 200) {
-                    System.out.println("[Telegram] Đã gửi cảnh báo thành công!");
+                    System.out.println("[Telegram] Warning have been sent!");
                 } else {
-                    System.out.println("[Telegram] Lỗi gửi tin: " + responseCode);
+                    System.out.println("[Telegram] Error sending message: " + responseCode);
                 }
             } catch (Exception e) {
-                System.out.println("[Telegram] Lỗi kết nối: " + e.getMessage());
+                System.out.println("[Telegram] Connection error: " + e.getMessage());
             }
         }).start();
     }
@@ -48,7 +48,7 @@ public class TelegramNotifier {
             
             // Chỉ gửi tin nhắn nếu đã qua 60 giây kể từ lần gửi trước
             if (currentTime - lastAlertTime > ALERT_COOLDOWN) {
-                String msg = " CẢNH BÁO: NHÀ CHÁY! \nNhiệt độ cao bất thường: " + temp + "°C\nHãy kiểm tra ngay lập tức!";
+                String msg = " Warning: Heat abnormal! : " + temp + "°C\nPlease check immediately!";
                 sendAlert(msg);
                 lastAlertTime = currentTime;
             }
