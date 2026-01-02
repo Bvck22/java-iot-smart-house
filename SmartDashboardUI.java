@@ -77,6 +77,7 @@ public class SmartDashboardUI extends DashboardUI {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }, 3, 15, TimeUnit.SECONDS); 
+        }, 3, 15, TimeUnit.SECONDS); // Đợi 3 giây để ổn định hệ thống. Lấy dữ liệu về mỗi 15 giây
     }
+
 }
