@@ -25,6 +25,7 @@ public class DatabaseManager {
                    + "id INT AUTO_INCREMENT PRIMARY KEY, "
                    + "temperature FLOAT, "
                    + "humidity FLOAT, "
+                   + "rain FLOAT, "
                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
                    + ")";
 
@@ -39,14 +40,15 @@ public class DatabaseManager {
         }
     }
 
-    public void saveSensorData(float temp, float hum) {
+    public void saveSensorData(float temp, float hum, float rain) {
        executor.submit(() -> {
-            String query = "INSERT INTO sensor_logs (temperature, humidity) VALUES (?, ?)";
+            String query = "INSERT INTO sensor_logs (temperature, humidity, rain) VALUES (?, ?, ?)";
             try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
                  PreparedStatement pstmt = conn.prepareStatement(query)) {
                 
                 pstmt.setFloat(1, temp);
                 pstmt.setFloat(2, hum);
+                pstmt.setFloat(3, rain); 
                 pstmt.executeUpdate();
                 
                 // Đã comment dòng này để đỡ spam Console

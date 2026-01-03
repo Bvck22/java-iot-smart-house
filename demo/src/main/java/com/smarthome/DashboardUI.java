@@ -228,7 +228,7 @@ public class DashboardUI extends JFrame implements DataListener {
                     
                     lblTemp.setText("Temperature: " + temp + " °C | Humidity: " + hum + "% | Rain: " + rainStr);
 
-                    dbManager.saveSensorData(temp, hum);
+                    dbManager.saveSensorData(temp, hum, rainVal);
 
                     timeSecond += 10;
                     seriesTemp.add(timeSecond, temp);
