@@ -6,19 +6,19 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public class TelegramNotifier {
-    // Thay TOKEN và CHAT_ID của bạn vào đây
+    
     private static final String API_TOKEN = "7951204215:AAGxsHkEn0KQNDONcLJIPgrBFa8qU2Gq9w4"; 
     private static final String CHAT_ID = "6215043621"; 
     
-    // Thêm biến để quản lý thời gian gửi tin (tránh spam)
+    // Biến quản lý thời gian gửi tin 
     private static long lastAlertTime = 0; 
-    private static final long ALERT_COOLDOWN = 60000; // 60 giây mới gửi 1 lần
+    private static final long ALERT_COOLDOWN = 60000; // 60s giữa 2 lần gửi 
 
     public static void sendAlert(String message) {
-        // Chạy trong luồng riêng để không làm đơ App
+        // Chạy trong luồng riêng 
         new Thread(() -> {
             try {
-                // Mã hóa tin nhắn (đổi khoảng trắng thành %20...)
+                // Mã hóa tin nhắn 
                 String encodedMsg = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
                 
                 // Tạo đường dẫn gửi tin
@@ -40,19 +40,19 @@ public class TelegramNotifier {
         }).start();
     }
 
-    // --- MỚI THÊM: Hàm kiểm tra ngưỡng nhiệt độ ---
+    // Hàm kiểm tra ngưỡng nhiệt độ 
     public static boolean checkAndAlertFire(float temp) {
-        // Kiểm tra nếu nhiệt độ vượt ngưỡng 31.5
+        
         if (temp > 32) {
             long currentTime = System.currentTimeMillis();
             
-            // Chỉ gửi tin nhắn nếu đã qua 60 giây kể từ lần gửi trước
+            // Gửi tin nhắn nếu đã qua 60s kể từ lần gửi trước
             if (currentTime - lastAlertTime > ALERT_COOLDOWN) {
                 String msg = " Warning: Heat abnormal! : " + temp + "°C\nPlease check immediately!";
                 sendAlert(msg);
                 lastAlertTime = currentTime;
             }
-            return true; // Trả về true để báo hiệu cho giao diện biết là đang nguy hiểm
+            return true; // Báo hiệu cho giao diện biết là đang nguy hiểm
         }
         return false; // Bình thường
     }

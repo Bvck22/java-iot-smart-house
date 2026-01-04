@@ -20,11 +20,11 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.PiePlot; // --- MỚI: Dùng cho biểu đồ tròn ---
+import org.jfree.chart.plot.PiePlot; 
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.general.DefaultPieDataset; // --- MỚI: Dataset cho biểu đồ tròn ---
+import org.jfree.data.general.DefaultPieDataset; 
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -39,7 +39,7 @@ public class DashboardUI extends JFrame implements DataListener {
     private XYSeries seriesTemp;
     private XYSeries seriesHum;
     
-    // --- MỚI: Dataset cho biểu đồ tròn mưa ---
+    
     private DefaultPieDataset rainDataset;
     
     private int timeSecond = 0;
@@ -61,14 +61,13 @@ public class DashboardUI extends JFrame implements DataListener {
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Control Center", createDashboardPanel());
-        tabbedPane.addTab("Temp & Hum Chart", createChartPanel());
-        // --- MỚI: Thêm Tab biểu đồ tròn ---
+        tabbedPane.addTab("Temp & Hum Chart", createChartPanel()); 
         tabbedPane.addTab("Rain Level (Pie Chart)", createRainPieChartPanel());
 
         add(tabbedPane);
         setVisible(true);
     }
-
+    // Tab 1: Bảng điều khiển chính
     private JPanel createDashboardPanel() {
         JPanel pnlMain = new JPanel(new BorderLayout());
 
@@ -96,7 +95,7 @@ public class DashboardUI extends JFrame implements DataListener {
         pnlMain.add(pnlControls, BorderLayout.CENTER);
         return pnlMain;
     }
-
+    // Tạo panel điều khiển cho từng thiết bị
     private JPanel createDevicePanel(String deviceName, String onCmd, String offCmd, Color bgColor) {
         JPanel panel = new JPanel(new GridLayout(3, 1, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder(
@@ -133,7 +132,7 @@ public class DashboardUI extends JFrame implements DataListener {
         return panel;
     }
 
-    // --- Tab 2: Biểu đồ đường (Line Chart) ---
+    // Tab 2: Biểu đồ đường (Line Chart) 
     private JPanel createChartPanel() {
         seriesTemp = new XYSeries("Temperature (°C)");
         XYSeriesCollection datasetTemp = new XYSeriesCollection(seriesTemp);
@@ -154,7 +153,6 @@ public class DashboardUI extends JFrame implements DataListener {
         rendererTemp.setSeriesShapesVisible(0, true);
         plot.setRenderer(0, rendererTemp);
 
-        // Setup Dataset 2 (Humidity)
         seriesHum = new XYSeries("Humidity (%)");
         XYSeriesCollection datasetHum = new XYSeriesCollection(seriesHum);
         
@@ -174,27 +172,26 @@ public class DashboardUI extends JFrame implements DataListener {
         return new ChartPanel(chart);
     }
 
-    // --- MỚI: Tab 3: Biểu đồ tròn (Pie Chart) cho Lượng mưa ---
+    //  Tab 3: Biểu đồ tròn (Pie Chart) cho Lượng mưa 
     private JPanel createRainPieChartPanel() {
         rainDataset = new DefaultPieDataset();
-        // Khởi tạo giá trị mặc định
         rainDataset.setValue("Rain Level", 0);
         rainDataset.setValue("Dry (Empty)", 100);
 
         JFreeChart chart = ChartFactory.createPieChart(
-            "Current Rain Sensor Status",   // Tiêu đề
-            rainDataset,                    // Dữ liệu
-            true,                           // Hiển thị chú thích (Legend)
+            "Current Rain Sensor Status",   
+            rainDataset,                    
+            true,                           
             true,
             false
         );
 
-        // Tùy chỉnh màu sắc cho đẹp
-        PiePlot plot = (PiePlot) chart.getPlot();
-        plot.setSectionPaint("Rain Level", new Color(51, 153, 255)); // Màu xanh nước biển
-        plot.setSectionPaint("Dry (Empty)", new Color(220, 220, 220)); // Màu xám nhạt
         
-        // Hiển thị phần trăm
+        PiePlot plot = (PiePlot) chart.getPlot();
+        plot.setSectionPaint("Rain Level", new Color(51, 153, 255)); 
+        plot.setSectionPaint("Dry (Empty)", new Color(220, 220, 220)); 
+        
+        
         plot.setSimpleLabels(true);
 
         return new ChartPanel(chart);
@@ -234,17 +231,17 @@ public class DashboardUI extends JFrame implements DataListener {
                     seriesTemp.add(timeSecond, temp);
                     seriesHum.add(timeSecond, hum);
                     
-                    // --- MỚI: Cập nhật biểu đồ tròn ---
-                    // Giả sử cảm biến trả về 0-100 (%), nếu dùng 0-1024 thì bạn chia tỉ lệ lại nhé
+                    // Cập nhật biểu đồ tròn
+                    
                     float maxVal = 100.0f; 
                     float rainDisplay = rainVal;
-                    if (rainDisplay > maxVal) rainDisplay = maxVal; // Cắt trần nếu quá 100
+                    if (rainDisplay > maxVal) rainDisplay = maxVal; // Cắt nếu quá 100
                     
                     rainDataset.setValue("Rain Level", rainDisplay);
                     rainDataset.setValue("Dry (Empty)", maxVal - rainDisplay);
-                    // ----------------------------------
+                    
 
-                    // Gọi sang TelegramNotifier để kiểm tra logic 31.5 độ
+                    // Gọi sang TelegramNotifier để kiểm tra logic gửi cảnh báo
                     boolean isDangerous = TelegramNotifier.checkAndAlertFire(temp);
 
                     if (isDangerous) {

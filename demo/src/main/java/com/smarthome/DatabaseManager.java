@@ -51,8 +51,6 @@ public class DatabaseManager {
                 pstmt.setFloat(3, rain); 
                 pstmt.executeUpdate();
                 
-                // Đã comment dòng này để đỡ spam Console
-                // System.out.println("[MySQL] Đã lưu: " + temp + " - " + hum);
                 
             } catch (SQLException e) {
                 e.printStackTrace();

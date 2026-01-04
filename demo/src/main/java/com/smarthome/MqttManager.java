@@ -5,18 +5,18 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import java.nio.charset.StandardCharsets;
 
 public class MqttManager {
-    // 1. Cấu hình Server (Dùng server public miễn phí của HiveMQ để test)
+    // 1. Cấu hình Server MQTT
     private static final String BROKER = "tcp://broker.hivemq.com:1883";
     private static final String CLIENT_ID = "JavaApp_SmartHome_" + System.currentTimeMillis();
     
-    // 2. Các TOPIC (Kênh phát thanh)
-    // Java gửi lệnh vào kênh này -> ESP32 lắng nghe
+    // 2. Các TOPIC 
+    // App gửi lệnh vào kênh này -> ESP32 lắng nghe
     public static final String TOPIC_CONTROL = "smarthome/k22/control"; 
-    // ESP32 gửi nhiệt độ vào kênh này -> Java lắng nghe
+    // ESP32 gửi data vào kênh này -> App lắng nghe
     public static final String TOPIC_DATA = "smarthome/k22/sensor";     
 
     private MqttClient client;
-    private DataListener listener; // Vẫn dùng lại Interface cũ của bạn
+    private DataListener listener; 
 
     public boolean connect() {
         try {
@@ -25,14 +25,14 @@ public class MqttManager {
             
             MqttConnectOptions options = new MqttConnectOptions();
             options.setCleanSession(true);
-            options.setConnectionTimeout(10); // 10 giây timeout
+            options.setConnectionTimeout(10); 
 
             System.out.println("Connecting to Broker: " + BROKER);
             client.connect(options);
             
             if (client.isConnected()) {
                 System.out.println(">> MQTT Successfully Connected!");
-                startSubscribing(); // Kết nối xong là đăng ký nghe ngay
+                startSubscribing(); 
                 return true;
             }
         } catch (MqttException e) {
@@ -41,12 +41,12 @@ public class MqttManager {
         return false;
     }
 
-    // Hàm gửi lệnh (Thay thế sendData của Serial)
+    // Hàm gửi lệnh điều khiển
     public void publish(String message) {
         if (client != null && client.isConnected()) {
             try {
                 MqttMessage msg = new MqttMessage(message.getBytes(StandardCharsets.UTF_8));
-                msg.setQos(0); // Qos 0: Gửi 1 lần, không cần xác nhận (nhanh)
+                msg.setQos(0); 
                 client.publish(TOPIC_CONTROL, msg);
                 System.out.println("[MQTT Send]: " + message + " -> " + TOPIC_CONTROL);
             } catch (MqttException e) {
@@ -55,14 +55,13 @@ public class MqttManager {
         }
     }
 
-    // Hàm đăng ký lắng nghe dữ liệu từ cảm biến
+    // Hàm đăng ký lắng nghe dữ liệu từ ESP32
     private void startSubscribing() {
         try {
             client.subscribe(TOPIC_DATA, (topic, msg) -> {
                 String payload = new String(msg.getPayload(), StandardCharsets.UTF_8);
-                // System.out.println("Nhận từ " + topic + ": " + payload);
                 
-                // Báo về cho giao diện (DashboardUI)
+                
                 if (listener != null) {
                     listener.onDataReceived(payload);
                 }
@@ -73,7 +72,7 @@ public class MqttManager {
         }
     }
 
-    // Đăng ký người nghe (Observer)
+    // Đăng ký listener
     public void setDataListener(DataListener listener) {
         this.listener = listener;
     }
