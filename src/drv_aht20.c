@@ -1,23 +1,38 @@
+/**
+ * @file       drv_aht20.c
+ * @copyright  None
+ * @version    1.0.0
+ * @date       2025-12-20
+ * @author     Bach Pham
+ * @brief      AHT20 Temperature and Humidity Sensor Driver Implementation
+ */
+
+/* Includes ----------------------------------------------------------- */
 #include "drv_aht20.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+/* Private defines ---------------------------------------------------- */
 #define AHT20_ADDR 0x38
 #define I2C_PORT I2C_NUM_0
 
-static esp_err_t send_cmd(uint8_t cmd, uint8_t d1, uint8_t d2) {
-  i2c_cmd_handle_t link = i2c_cmd_link_create();
-  i2c_master_start(link);
-  i2c_master_write_byte(link, (AHT20_ADDR << 1) | I2C_MASTER_WRITE, true);
-  i2c_master_write_byte(link, cmd, true);
-  i2c_master_write_byte(link, d1, true);
-  i2c_master_write_byte(link, d2, true);
-  i2c_master_stop(link);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT, link, pdMS_TO_TICKS(1000));
-  i2c_cmd_link_delete(link);
-  return ret;
-}
+/* Private enumerate/structure ---------------------------------------- */
+/* Private macros ----------------------------------------------------- */
+/* Public variables --------------------------------------------------- */
+/* Private variables -------------------------------------------------- */
+/* Private function prototypes ---------------------------------------- */
+/**
+ * @brief  Send command to AHT20 sensor register
+ *
+ * @param[in]  cmd     Command byte to send
+ * @param[in]  d1      First data byte to send
+ * @param[in]  d2      Second data byte to send
+ * @attention  Ensure I2C bus is initialized before calling this function.
+ * @return     ESP_OK on success, error code on failure
+ */
+static esp_err_t send_cmd(uint8_t cmd, uint8_t d1, uint8_t d2);
 
+/* Function definitions ----------------------------------------------- */
 esp_err_t drv_aht20_init(int sda_pin, int scl_pin) {
   i2c_config_t conf = {
       .mode = I2C_MODE_MASTER,
@@ -78,3 +93,19 @@ esp_err_t drv_aht20_read(float *temperature, float *humidity) {
   *temperature = ((float)t_raw / 1048576.0f) * 200.0f - 50.0f;
   return ESP_OK;
 }
+
+/* Private definitions ----------------------------------------------- */
+static esp_err_t send_cmd(uint8_t cmd, uint8_t d1, uint8_t d2) {
+  i2c_cmd_handle_t link = i2c_cmd_link_create();
+  i2c_master_start(link);
+  i2c_master_write_byte(link, (AHT20_ADDR << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(link, cmd, true);
+  i2c_master_write_byte(link, d1, true);
+  i2c_master_write_byte(link, d2, true);
+  i2c_master_stop(link);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT, link, pdMS_TO_TICKS(1000));
+  i2c_cmd_link_delete(link);
+  return ret;
+}
+
+/* End of file -------------------------------------------------------- */
