@@ -1,0 +1,59 @@
+package com.smarthome;
+
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+public class TelegramNotifier {
+    
+    private static final String API_TOKEN = "7951204215:AAGxsHkEn0KQNDONcLJIPgrBFa8qU2Gq9w4"; 
+    private static final String CHAT_ID = "6215043621"; 
+    
+    // Biến quản lý thời gian gửi tin 
+    private static long lastAlertTime = 0; 
+    private static final long ALERT_COOLDOWN = 60000; // 60s giữa 2 lần gửi 
+
+    public static void sendAlert(String message) {
+        // Chạy trong luồng riêng 
+        new Thread(() -> {
+            try {
+                // Mã hóa tin nhắn 
+                String encodedMsg = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
+                
+                // Tạo đường dẫn gửi tin
+                String urlString = "https://api.telegram.org/bot" + API_TOKEN + "/sendMessage?chat_id=" + CHAT_ID + "&text=" + encodedMsg;
+                
+                URL url = new URL(urlString);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                
+                int responseCode = conn.getResponseCode();
+                if (responseCode == 200) {
+                    System.out.println("[Telegram] Warning have been sent!");
+                } else {
+                    System.out.println("[Telegram] Error sending message: " + responseCode);
+                }
+            } catch (Exception e) {
+                System.out.println("[Telegram] Connection error: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    // Hàm kiểm tra ngưỡng nhiệt độ 
+    public static boolean checkAndAlertFire(float temp) {
+        
+        if (temp > 32) {
+            long currentTime = System.currentTimeMillis();
+            
+            // Gửi tin nhắn nếu đã qua 60s kể từ lần gửi trước
+            if (currentTime - lastAlertTime > ALERT_COOLDOWN) {
+                String msg = " Warning: Heat abnormal! : " + temp + "°C\nPlease check immediately!";
+                sendAlert(msg);
+                lastAlertTime = currentTime;
+            }
+            return true; // Báo hiệu cho giao diện biết là đang nguy hiểm
+        }
+        return false; // Bình thường
+    }
+}
