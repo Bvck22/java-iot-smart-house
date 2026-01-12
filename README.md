@@ -1,5 +1,11 @@
 # IoT Smart House (Java + ESP32)
 
+![ESP32](https://img.shields.io/badge/ESP32-E7352C?style=for-the-badge&logo=espressif&logoColor=white)
+![MQTT](https://img.shields.io/badge/MQTT-3C2763?style=for-the-badge&logo=mqtt&logoColor=white)
+![Java 17 | 21](https://img.shields.io/badge/Java_17_%7C_21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![VS Code](https://img.shields.io/badge/VS_Code-0078D4?style=for-the-badge&logo=visualstudiocode&logoColor=white)
+![PlatformIO](https://img.shields.io/badge/PlatformIO-F58225?style=for-the-badge&logo=platformio&logoColor=white)
+
 Smart home system with three parts: a Java desktop app for control/monitoring over MQTT, an AI module forecasting temperature from CSV data, and ESP32 firmware to drive LED/Fan/Buzzer, read sensors, and publish sensor data.
 
 ## Quick Architecture
@@ -38,6 +44,8 @@ UI shows CSV ingestion logs, 15-minute temperature prediction, and action sugges
 cd low-level
 platformio run --target upload
 ```
+<img width="655" height="740" alt="image" src="https://github.com/user-attachments/assets/83b1676a-b2c6-4109-a0d7-533c48fa40cd" />
+
 
 ## Folder Structure
 - [application](application): Java 21 Swing + MQTT + MySQL + Telegram.
